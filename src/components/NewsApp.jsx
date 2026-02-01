@@ -241,32 +241,26 @@ function NewsApp() {
   const fetchNews = async (cat = category, query = '') => {
     setLoading(true);
     setError(null);
-    
-    // Your actual API key
-    const apiKey = '24aeef641303455cacf6f9c6ede44aab';
-    
-    let apiUrl = '';
-    
-    if (query) {
-      apiUrl = `https://newsapi.org/v2/everything?q=${query}&apiKey=${apiKey}&pageSize=20&language=en`;
-    } else {
-      apiUrl = `https://newsapi.org/v2/top-headlines?country=${country}&category=${cat}&apiKey=${apiKey}&pageSize=20`;
-    }
-    
+
     try {
-      const response = await axios.get(apiUrl);
+      const response = await axios.get(
+        `/api/news?category=${cat}&q=${query}`
+      );
+
       if (response.data && response.data.articles) {
-        const validArticles = response.data.articles.filter(article => 
-          article.urlToImage && article.title && article.description
+        const validArticles = response.data.articles.filter(
+          article =>
+            article.urlToImage &&
+            article.title &&
+            article.description
         );
         setArticles(validArticles);
       } else {
         setError("No news articles found.");
       }
     } catch (err) {
-      console.error('Error fetching news:', err);
+      console.error("Error fetching news:", err);
       setError("Unable to fetch live news. Showing demo articles.");
-      // Fallback to demo data
       setArticles(getDemoArticles(cat));
     } finally {
       setLoading(false);
