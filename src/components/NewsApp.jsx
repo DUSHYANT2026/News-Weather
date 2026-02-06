@@ -238,34 +238,37 @@ function NewsApp() {
     return demoData[cat] || demoData.general;
   };
 
-  const fetchNews = async (cat = category, query = '') => {
-    setLoading(true);
-    setError(null);
+const fetchNews = async (cat = category, query = '') => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await axios.get(
-        `/api/news?category=${cat}&q=${query}`
+  try {
+    const response = await axios.get(`/api/news?category=${cat}&q=${query}`);
+
+    // Check if we actually got articles back
+    if (response.data && response.data.articles && response.data.articles.length > 0) {
+      const validArticles = response.data.articles.filter(
+        article => article.urlToImage && article.title && article.description
       );
-
-      if (response.data && response.data.articles) {
-        const validArticles = response.data.articles.filter(
-          article =>
-            article.urlToImage &&
-            article.title &&
-            article.description
-        );
-        setArticles(validArticles);
-      } else {
-        setError("No news articles found.");
+      
+      // If filtering removed everything, fall back to demo
+      if (validArticles.length === 0) {
+        throw new Error("No valid articles after filtering");
       }
-    } catch (err) {
-      console.error("Error fetching news:", err);
-      setError("Unable to fetch live news. Showing demo articles.");
+      
+      setArticles(validArticles);
+    } else {
+      // API returned empty, use demo data
       setArticles(getDemoArticles(cat));
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    console.error("Error fetching news:", err);
+    setError("Showing demo articles (Live feed unavailable).");
+    setArticles(getDemoArticles(cat));
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchNews();
